@@ -1,0 +1,20 @@
+#version 330
+
+in vec2 uv;
+uniform sampler2D textureSampler;
+out vec4 frag_colour;
+
+
+void main () {
+
+
+  vec4 colour = texture(textureSampler, uv);
+  
+  
+  //frag_colour = vec4(colour.r, colour.g, colour.b, 1.0);
+
+
+ 
+  frag_colour = vec4(colour.r, colour.r, colour.r, 1.0);
+
+} 

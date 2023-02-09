@@ -1,31 +1,151 @@
 #version 330
 
-in vec2 uv;
-uniform sampler2D textureSampler;
+//in vec2 uv;
+
+in vec4 mycolor;
+
+uniform sampler2D roadSampler;	
+uniform sampler2D grassSampler;	
+uniform sampler2D towerSampler;	
+uniform sampler2D crystalSampler;	
+uniform sampler2D robotSampler;	
+
+uniform sampler2D shadowMapSampler;
+in mat4 Vout;	
+
+
+struct Light {
+    vec4 La;
+    vec4 Ld;
+    vec4 Ls;
+    vec3 lightPosition_worldspace;
+    float power;
+};
+uniform Light light;
+
+
+flat in int isPlane;
+flat in int isTower;
+flat in int isCrystal;
+flat in int isRobot;
+
+
+flat in int RoadTex;
+
+
+in vec3 vertex_position_worldspace;
+in vec3 vertex_position_cameraspace;
+in vec3 vertex_normal_cameraspace;
+in vec4 vertex_position_lightspace;
+in vec2 vertex_UV;
+
 out vec4 frag_colour;
-
-// Task ?.? Perspective Shadows
-float near_plane = 1.0f;
-float far_plane = 30.0f;
-float LinearizeDepth(float depth){
-    float z = depth * 2.0 - 1.0; // Values in [-1, 1]
-    return (2.0 * near_plane * far_plane) / (far_plane + near_plane - z * (far_plane - near_plane));
-}
-
 
 void main () {
 
-  frag_colour = vec4(1.0f);
+	vec4 main_texture=vec4(1.,1.,1.,1.);
+
+	
+	if(isPlane==1){
+
+		if( RoadTex == 0 ){
+			 main_texture = texture(grassSampler, vertex_UV);
+		}
+		else{
+			main_texture = texture(roadSampler, vertex_UV);
+		}
+	}
+	
+
+	if(isTower==1){
+	
+		main_texture = texture(towerSampler, vertex_UV);
+	
+	}
+	
+	if(isCrystal==1){
+	
+		main_texture = texture(crystalSampler, vertex_UV);
+	
+	}
+	
+	if(isRobot==1){
+	
+		main_texture = texture(robotSampler, vertex_UV);
+	
+	}
 
 
-  vec4 colour = texture(textureSampler, uv);
+    float shadow;
+
+	vec3 projCoords =   vertex_position_lightspace.xyz/vertex_position_lightspace.w;
+	//vec3 projCoords =   vertex_position_worldspace;
+
+    // Since the depth map values are in range[0, 1]
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Sampling the closest point in this position from the depth map
+    // REMINDER: Since we are in lightspace coordinates,
+    //           the z parameter is the depth from the camera
+    float closestDepth = texture(shadowMapSampler,projCoords.xy).r;
+
+    // Then we get the depth of the current vertex
+    float currentDepth = projCoords.z;
+
   
-  // Task 2.3
-  // render any texture
-  //frag_colour = vec4(colour.r, colour.g, colour.b, 1.0);
 
-  // Task 3.4
-  // render depth map
-  frag_colour = vec4(colour.r, colour.r, colour.r, 1.0);
+    //Dynamically Calculated bias
+    vec3 N = normalize(vertex_normal_cameraspace); 
+    vec3 L = normalize((Vout * vec4(light.lightPosition_worldspace, 1)).xyz - vertex_position_cameraspace);
+    float cosTheta = clamp(dot(L, N), 0, 1);
+
+    float bias = 0.005*tan(acos(cosTheta));
+    bias = clamp(bias, 0,0.01);
+    //bias = 0.05;
+        
+    //shadow = closestDepth > currentDepth ? 0.0f:1.0f;
+
+    ///*
+    shadow = 0.0;
+    vec2 depthMap_dimensions = textureSize(shadowMapSampler, 0);
+    vec2 texelSize = 1.0 / depthMap_dimensions;
+    for(int x = -1; x <= 1; x++ ){
+        for(int y = -1; y <= 1; y++ ){
+            float pcfDepth = texture(shadowMapSampler, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0; 
+        }
+    }
+    shadow /= 9.0;
+    //*/
+    if(projCoords.z > 1.0){
+        shadow = 0.0;
+     }
+
+    shadow = 1.0-shadow;
+
+
+	vec4 Ks = vec4(0.5,0.5,0.5, 1.0);
+    vec4 Kd = vec4(main_texture.rgb, 1.0);
+    vec4 Ka = vec4(0.1, 0.1, 0.1, 1.0);
+    float Ns = 10;
+
+
+	vec4 Ia = light.La * Ka;
+
+    vec4 Id = light.Ld * Kd * cosTheta; 
+
+    // model specular intensity (Is)
+    vec3 R = reflect(-L, N);
+    vec3 E = normalize(- vertex_position_cameraspace);
+    float cosAlpha = clamp(dot(E, R), 0, 1);
+    float specular_factor = pow(cosAlpha, Ns);
+    vec4 Is = light.Ls * Ks * specular_factor;
+
+    //model the light distance effect
+    float distance = length(light.lightPosition_worldspace - vertex_position_worldspace);
+    float distance_sq = distance * distance;
+
+	frag_colour = vec4(Ia + shadow * Id * light.power / distance_sq + shadow*Is * light.power / distance_sq);
+  //frag_colour = vec4(0.3,0.5,0.4,1.0);
 
 } 

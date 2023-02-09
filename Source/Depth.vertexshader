@@ -1,0 +1,22 @@
+#version 330
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 3) in vec3 Offset;
+
+// Values that stay constant for the whole mesh.
+
+uniform mat4 V;
+uniform mat4 P;
+uniform mat4 M;
+
+uniform int isPlane;
+
+void main()
+{
+    if(isPlane==1){
+        gl_Position = P*V*M* vec4(vertexPosition_modelspace+Offset,1.0);
+    
+    }
+    else{
+        gl_Position =   P*V*M * vec4(vertexPosition_modelspace, 1.0);
+    }
+}

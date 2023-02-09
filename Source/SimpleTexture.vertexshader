@@ -1,10 +1,92 @@
 #version 330
-layout(location = 0) in vec3 vertexPosition;
-layout(location = 2) in vec2 vertexUV;
 
-out vec2 uv;
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexNormal_modelspace;
+layout(location = 2) in vec2 vertexUV;
+layout (location = 3) in vec3 Offset;
+layout (location = 4) in int TexSel;
+
+uniform mat4 P;
+uniform mat4 V;
+uniform mat4 M;
+uniform mat4 lightVP;
+
+
+//out vec4 mycolor;
+uniform int IsTower;
+uniform int IsPlane;
+uniform int IsCrystal;
+uniform int IsRobot;
+
+//out vec2 uv;
+
+//out vec4 color
+flat out int RoadTex;
+flat out int isTower;
+flat out int isPlane;
+flat out int isCrystal;
+flat out int isRobot;
+
+
+out mat4 Vout;
+out vec3 vertex_position_worldspace;
+out vec3 vertex_position_cameraspace;
+out vec3 vertex_normal_cameraspace;
+out vec2 vertex_UV;
+out vec4 vertex_position_lightspace;
 
 void main() {
-	uv = vertexUV;
-	gl_Position = vec4(vertexPosition, 1.0);
+
+	
+	RoadTex=TexSel;
+	//mycolor= vec4(0.0f,0.0f,0.0f,1.0f);
+	if(IsPlane == 1){
+		isPlane=IsPlane;
+
+		vertex_position_worldspace = (M *vec4(vertexPosition_modelspace+Offset, 1)).xyz;
+		vertex_position_cameraspace = (V  *M* vec4(vertexPosition_modelspace+Offset, 1)).xyz;
+		vertex_normal_cameraspace = (V * M * vec4(vertexNormal_modelspace, 0)).xyz; 
+		vertex_position_lightspace = lightVP * M * vec4(vertexPosition_modelspace+Offset, 1); 
+		vertex_UV = vertexUV;
+		gl_Position = P*V*M* vec4(vertexPosition_modelspace+Offset,1.0);
+	}
+	else{
+		isPlane=0;
+
+		vertex_position_worldspace = (M *vec4(vertexPosition_modelspace, 1)).xyz;
+		vertex_position_cameraspace = (V  *M* vec4(vertexPosition_modelspace, 1)).xyz;
+		vertex_normal_cameraspace = (V * M * vec4(vertexNormal_modelspace, 0)).xyz; 
+		vertex_position_lightspace = lightVP *M * vec4(vertexPosition_modelspace, 1); 
+		vertex_UV = vertexUV;
+		gl_Position = P*V*M* vec4(vertexPosition_modelspace,1.0);
+
+		
+
+	}
+	if(IsTower==1){
+			isTower=IsTower;
+	}
+	else{
+		isTower=0;
+	}
+	
+	if(IsCrystal==1){
+		isCrystal=IsCrystal;
+	}
+	else{
+		isCrystal=0;
+	}
+	
+	if(IsRobot==1){
+		isRobot=IsRobot;
+			
+	}
+	else{
+		isRobot=0;
+	}
+	Vout=V;
+	
+
+
+	
 }
