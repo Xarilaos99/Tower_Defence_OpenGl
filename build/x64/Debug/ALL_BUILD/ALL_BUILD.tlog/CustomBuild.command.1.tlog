@@ -1,0 +1,10 @@
+^C:\PROGRAMMING\GRAFIKA\TOWER_DEFENCE_PROJECT\CMAKELISTS.TXT
+setlocal
+C:\Users\chxar\Downloads\cmake-3.23.0-windows-x86_64\cmake-3.23.0-windows-x86_64\bin\cmake.exe -SC:/Programming/Grafika/Tower_Defence_Project -BC:/Programming/Grafika/Tower_Defence_Project/build --check-stamp-file C:/Programming/Grafika/Tower_Defence_Project/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

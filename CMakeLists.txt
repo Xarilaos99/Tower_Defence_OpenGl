@@ -77,6 +77,7 @@ include_directories(
   external/Simple-OpenGL-Image-Library/include/
   external/tinyxml2/include/
   external/tinyobjloader/include/
+  external/imgui/include/
   .
   )
 
@@ -86,6 +87,7 @@ set(ALL_LIBS
   GLEW_1130
   SOIL
   TINYXML2
+  IMGUI
   )
 
 add_definitions(
@@ -114,11 +116,32 @@ add_executable(${Myexe}
   common/model.h
   common/texture.cpp
   common/texture.h
+  common/defines.h
+  common/renderer.cpp
+  common/renderer.h
+  common/plane.cpp
+  common/plane.h
+  common/light.cpp
+  common/light.h
+  common/robot.cpp
+  common/robot.h
+  common/tower.cpp
+  common/tower.h
+  common/crystal.cpp
+  common/crystal.h
 
+  ${Mydir}/Assets/fiery.bmp
+  ${Mydir}/Assets/road.bmp
+  
+  
 
   
   ${Mydir}/SimpleTexture.fragmentshader
   ${Mydir}/SimpleTexture.vertexshader
+  ${Mydir}/Depth.fragmentshader
+  ${Mydir}/Depth.vertexshader
+  ${Mydir}/Quad.fragmentshader
+  ${Mydir}/Quad.vertexshader
   
   )
 target_link_libraries(${Myexe}
@@ -136,8 +159,13 @@ create_default_target_launcher(${Myexe} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURC
 
 ###############################################################################
 
+
+
+
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
+SOURCE_GROUP(assets REGULAR_EXPRESSION ".*/.*bmp$" )
+
 SOURCE_GROUP(obj REGULAR_EXPRESSION ".*/.*obj$" )
 
 ###############################################################################

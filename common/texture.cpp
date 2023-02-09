@@ -28,6 +28,7 @@ GLuint loadBMP(const char* imagePath) {
     // If less than 54 bytes are read, problem
     if (fread(header, 1, 54, file) != 54) {
         fclose(file);
+        
         throw runtime_error("Not a correct BMP file");
     }
     // A BMP files always begins with "BM"
@@ -36,14 +37,19 @@ GLuint loadBMP(const char* imagePath) {
         throw runtime_error("Not a correct BMP file");
     }
     // Make sure this is a 24bpp file
+
+   
     if (*(int*)&(header[0x1E]) != 0) {
         fclose(file);
+        
         throw runtime_error("Not a correct BMP file");
     }
     if (*(int*)&(header[0x1C]) != 24) {
         fclose(file);
+        
         throw runtime_error("Not a correct BMP file");
     }
+    
 
     // Read the information about the image
     dataPos = *(int*)&(header[0x0A]);
@@ -96,6 +102,7 @@ GLuint loadBMP(const char* imagePath) {
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // Return the ID of the texture we just created
+  
     return textureID;
 }
 
@@ -234,3 +241,61 @@ GLuint loadSOIL(const char* imagePath) {
 
     return texture;
 }
+
+
+void Texture::myloadSOIL(const char* imagePath) {
+    cout << "Reading image: " << imagePath << endl;
+
+    
+
+    //Load Image File Directly into an OpenGL Texture
+    textureID = SOIL_load_OGL_texture
+    (
+        imagePath,
+        SOIL_LOAD_RGB,
+        SOIL_CREATE_NEW_ID,
+        SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_POWER_OF_TWO
+    );
+
+    // error check
+    if (textureID == 0) {
+        cout << "SOIL loading error: " << SOIL_last_result() << endl;
+    }
+
+   
+}
+
+
+//CLASS TEXTURE========================================
+Texture::~Texture()
+{
+    glDeleteTextures(1, &textureID);
+
+}
+
+
+void Texture::myloaderBMP(const char* imagePath) {
+    textureID = loadBMP(imagePath);
+
+}
+
+
+void Texture::shaderCall(GLuint program, const char* textureSadder) {
+    textureSampler = glGetUniformLocation(program, textureSadder);
+}
+
+void Texture::useTexture(int val) {
+    int t = 0x84C0;
+    t += val;
+    
+
+    glActiveTexture(t);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glUniform1i(textureSampler,val);
+}
+
+
+
+
+
+

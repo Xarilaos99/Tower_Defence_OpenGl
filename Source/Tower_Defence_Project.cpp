@@ -1,60 +1,53 @@
-// Include C++ headers
+
+
+#include "../common/renderer.h"
 #include <iostream>
-#include <string>
-#include <vector>
-#include <stdio.h>
-
-// Include GLEW
-#include <GL/glew.h>
-
-// Include GLFW
-#include <glfw3.h>
-
-// Include GLM
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-// Shader loading utilities and other
-#include <common/shader.h>
-#include <common/util.h>
-#include <common/camera.h>
-#include <common/model.h>
-#include <common/texture.h>
-
 using namespace std;
-using namespace glm;
 
-
-
+/*
 void initialize();
 void createContext();
 void mainLoop();
 void free();
 void pollKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods);
+*/
 
-#define W_WIDTH 1024
-#define W_HEIGHT 768
-#define TITLE "My Tower Defence"
 
+
+Renderer towerDefence;
 // Global variables
-GLFWwindow* window;
-Camera* camera;
-
-GLuint shaderProgram;
 
 
-Drawable* terrain;
-GLuint VPLocation, MLocation;
+
 
 
 
 // Function 
+/*
 void createContext() {
     // Create and compile our GLSL program from the shaders
     shaderProgram = loadShaders("SimpleTexture.vertexshader", "SimpleTexture.fragmentshader");
 
     // Draw wire frame triangles or fill: GL_LINE, or GL_FILL
+    
+    
+    colors= glGetUniformLocation(shaderProgram, "mycolor");
+
+    terrain = new Drawable("Assets/terrain.obj" );
+    temp = new Drawable("suzanne.obj");
+
+    
+
+
+   //terrain = new Drawable(floorVertices, floorUVs, floorNormals);
+
+
+    roadTex.myloaderBMP("Assets/road.bmp");
+    roadTex.shaderCall(shaderProgram, "textureSampler");
+    
+
+
+
 
 
     // Get a pointer location to model matrix in the vertex shader
@@ -62,15 +55,61 @@ void createContext() {
     MLocation = glGetUniformLocation(shaderProgram, "M");
 }
 
+*/
 
+
+/*
 void mainLoop() {
+
+
     do {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(shaderProgram);
+
+        
+        
+
+        
+        //ImGui=============================================================
+        
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        NewFrame();
+        Begin("ImGui window");
+        Text("That's very bad");
+        ColorEdit4("Xrwma", color);
+        End();
+        Render();
+        ImGui_ImplOpenGL3_RenderDrawData(GetDrawData());
+        
+        
 
         //camera
         camera->update();
         mat4 projectionMatrix = camera->projectionMatrix;
         mat4 viewMatrix = camera->viewMatrix;
+        glUniform4f(colors, color[0], color[1], color[2], color[3]);
+
+        
+        terrain->bind();
+        roadTex.useTexture();
+        mat4 terrainModelMatrix = mat4(1);
+        mat4 terrainVP = projectionMatrix * viewMatrix;
+        glUniformMatrix4fv(VPLocation, 1, GL_FALSE, &terrainVP[0][0]);
+        glUniformMatrix4fv(MLocation, 1, GL_FALSE, &terrainModelMatrix[0][0]);
+        terrain->draw();
+       
+
+        
+        glUniformMatrix4fv(VPLocation, 1, GL_FALSE, &terrainVP[0][0]);
+        glUniformMatrix4fv(MLocation, 1, GL_FALSE, &terrainModelMatrix[0][0]);
+        temp->bind();
+        temp->draw();
+
+
+
+
         glfwSwapBuffers(window);
         glfwPollEvents();
 
@@ -78,21 +117,28 @@ void mainLoop() {
     }while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
     glfwWindowShouldClose(window) == 0);
 }
+*/
 
 
 //=================free======================
+/*
 void free() {
 
     
 
 
     glDeleteProgram(shaderProgram);
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    DestroyContext();
     
 
     glfwTerminate();
 }
+*/
 
-
+/*
 void initialize() {
     // Initialize GLFW
     if (!glfwInit()) {
@@ -137,29 +183,47 @@ void initialize() {
     glfwSetCursorPos(window, W_WIDTH / 2, W_HEIGHT / 2);
 
     // Gray background color
-    glClearColor(0.5f, 0.3f, 0.1f, 0.45f);
+    //glClearColor(0.5f, 0.3f, 0.1f, 0.45f);
+    glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
 
     //glfwSetKeyCallback(window, pollKeyboard);
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    
     glDepthFunc(GL_LESS);
 
-    // Task 3.3: blend must be enabled
-    //*/
+    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //*/
 
-    // Log
+    glEnable(GL_CULL_FACE);
+
+
+ 
     logGLParameters();
 
-    // Create camera
+    
+    
+   
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); 
+    (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+    
+
     camera = new Camera(window);
 
-
 }
+*/
+
+
+
+
 
 int main()
 {
@@ -167,17 +231,23 @@ int main()
     
     try
     {
+        /*
         initialize();
         createContext();
         mainLoop();
         free();
-        cout << "Ola kala" << endl;
+        */
+        towerDefence.createContext();
+        towerDefence.scene();
+
+
+        //cout << "Ola kala" << endl;
     }
     catch (exception& ex)
     {
         cout << ex.what() << endl;
         getchar();
-        free();
+        //free();
         return -1;
     }
 

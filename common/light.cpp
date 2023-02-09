@@ -1,3 +1,4 @@
+#include <Gl/glew.h>
 #include <glfw3.h>
 #include <iostream>
 #include <math.h>
@@ -19,16 +20,18 @@ Light::Light(GLFWwindow* window,
     lightPosition_worldspace = init_position;
 
     // setting near and far plane affects the detail of the shadow
-    nearPlane = 1.0;
-    farPlane = 30.0;
+    nearPlane = 0,1;
+    farPlane = 100.0;
+    win = 5;
 
+    targetPosition = glm::vec3(4.5, 0.0, 4.5);
+    
     direction = normalize(targetPosition - lightPosition_worldspace);
 
     lightSpeed = 0.1f;
-    targetPosition = glm::vec3(0.0, 0.0, -5.0);
 
 
-    projectionMatrix = ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+    projectionMatrix = ortho(-win, win, -win, win, nearPlane, farPlane);
     orthoProj = true;
 }
 
@@ -39,10 +42,10 @@ void Light::update() {
 
    // Move across z-axis
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
-        lightPosition_worldspace += lightSpeed * vec3(0.0, 0.0, 1.0);
+        lightPosition_worldspace -= lightSpeed * vec3(0.0, 0.0, 1.0);
     }
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
-        lightPosition_worldspace -= lightSpeed * vec3(0.0, 0.0, 1.0);
+        lightPosition_worldspace += lightSpeed * vec3(0.0, 0.0, 1.0);
     }
     // Move across x-axis
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
@@ -59,6 +62,23 @@ void Light::update() {
         lightPosition_worldspace -= lightSpeed * vec3(0.0, 1.0, 0.0);
     }
     
+    /*
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        power += 1;
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+        nearPlane += 1;
+    }
+
+
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        farPlane -= 1;
+    }
+    */
+
+   
+    
 
 
     // We have the direction of the light and the point where the light is looking at
@@ -66,7 +86,8 @@ void Light::update() {
     // just like we did with the camera
 
     direction = normalize(targetPosition - lightPosition_worldspace);
-
+    //projectionMatrix = ortho(-win, win, -win, win, nearPlane, farPlane);
+    
 
     // converting direction to cylidrical coordinates
     float x = direction.x;
@@ -93,7 +114,8 @@ void Light::update() {
     viewMatrix = lookAt(
         lightPosition_worldspace,
         targetPosition,
-        up 
+        up
+       
     );
     //*/
 
@@ -103,3 +125,33 @@ void Light::update() {
 mat4 Light::lightVP() {
     return projectionMatrix * viewMatrix;
 }
+
+
+
+void Light::shaderCall(GLuint shaderProgram) {
+    lightProps.LaLocation = glGetUniformLocation(shaderProgram, "light.La");
+    lightProps.LdLocation = glGetUniformLocation(shaderProgram, "light.Ld");
+    lightProps.LsLocation = glGetUniformLocation(shaderProgram, "light.Ls");
+    lightProps.lightPositionLocation = glGetUniformLocation(shaderProgram, "light.lightPosition_worldspace");
+    lightProps.lightPowerLocation = glGetUniformLocation(shaderProgram, "light.power");
+    lightProps.lightVPLocation = glGetUniformLocation(shaderProgram, "lightVP");
+
+
+}
+
+
+void Light::upLoad() {
+    glUniform4f(lightProps.LaLocation, La.r, La.g, La.b, La.a);
+    glUniform4f(lightProps.LdLocation, Ld.r, Ld.g, Ld.b, Ld.a);
+    glUniform4f(lightProps.LsLocation, Ls.r, Ls.g, Ls.b, Ls.a);
+    glUniform3f(lightProps.lightPositionLocation, lightPosition_worldspace.x, lightPosition_worldspace.y,
+        lightPosition_worldspace.z);
+    glUniform1f(lightProps.lightPowerLocation, power);
+
+    mat4 light_VP = lightVP();
+
+    glUniformMatrix4fv(lightProps.lightVPLocation, 1, GL_FALSE, &light_VP[0][0]);
+
+}
+
+

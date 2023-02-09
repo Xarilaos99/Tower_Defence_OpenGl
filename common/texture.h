@@ -2,10 +2,35 @@
 #define TEXTURE_H
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+
+
 
 /**
 * A simple .bmp loader. Use loadSOIL() instead.
 */
+
+class Texture {
+	public:
+		Texture() =default;
+		~Texture();
+
+		void myloaderBMP(const char* imagePath);
+		void myloadSOIL(const char* imagePath);
+		void shaderCall(GLuint program, const char* textureSadder);
+		void useTexture(int val);
+		const GLuint GetSam() { return textureSampler; }
+		const GLuint GetId() { return textureID; }
+	private:
+		GLuint textureID;
+		GLuint textureSampler;
+
+
+};
+
+
+
+
 GLuint loadBMP(const char* imagePath);
 
 /**
@@ -27,5 +52,8 @@ GLuint loadDDS(const char* imagePath);
 * http://www.lonesock.net/soil.html
 */
 GLuint loadSOIL(const char* imagePath);
+
+
+
 
 #endif

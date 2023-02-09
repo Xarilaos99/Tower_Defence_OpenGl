@@ -1,11 +1,12 @@
 #include <glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "camera.h"
+#include <iostream>
 
 using namespace glm;
 
 Camera::Camera(GLFWwindow* window) : window(window) {
-    position = vec3(.0, .0, .0);
+    position = vec3(5.5, 2, 13);
     horizontalAngle = 3.1f;
     verticalAngle = -0.4f;
     FoV = 88.0f;
@@ -16,6 +17,9 @@ Camera::Camera(GLFWwindow* window) : window(window) {
 
 void Camera::update() {
     // glfwGetTime is called only once, the first time this function is called
+    
+        
+    
     static double lastTime = glfwGetTime();
 
     // Compute time difference between current and last frame
@@ -23,48 +27,25 @@ void Camera::update() {
     float deltaTime = float(currentTime - lastTime);
 
     // Get mouse position
-    double xPos, yPos;
+    double xPos=512, yPos=384;
     glfwGetCursorPos(window, &xPos, &yPos);
 
-    int width, height;
+    int width=1024, height=738;
     glfwGetWindowSize(window, &width, &height);
+    //std::cout << xPos << " " << yPos << std::endl;
+    //std::cout << width << " " << height << std::endl;
 
     // Reset mouse position for next frame
     glfwSetCursorPos(window, width / 2, height / 2);
 
-    // Task 5.1: simple camera movement that moves in +-z and +-x axes
-    /*/
-    // Move forward
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        position -= vec3(0, 0, 1) * deltaTime * speed;
-    }
-    // Move backward
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        position += vec3(0, 0, 1) * deltaTime * speed;
-    }
-    // Strafe right
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        position += vec3(1, 0, 0) * deltaTime * speed;
-    }
-    // Strafe left
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        position -= vec3(1, 0, 0) * deltaTime * speed;
-    }
-
-    // Task 5.2: update view matrix so it always looks at the origin
-    projectionMatrix = perspective(radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f);
-    viewMatrix = lookAt(
-        position,
-        vec3(0, 0, 0),
-        vec3(0, 1, 0)
-    );
+   
     //*/
 
     // Task 5.3: Compute new horizontal and vertical angles, given windows size
     //*/
     // and cursor position
     horizontalAngle += mouseSpeed * float(width / 2 - xPos);
-    verticalAngle += mouseSpeed * float(height / 2 - yPos);
+    verticalAngle = mouseSpeed * float(height / 2 - yPos);
 
     // Task 5.4: right and up vectors of the camera coordinate system
     // use spherical coordinates
@@ -109,8 +90,13 @@ void Camera::update() {
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         if (radians(FoV) < 3.14 - radians(fovSpeed))
-        FoV += fovSpeed;
+            FoV += fovSpeed;
     }
+    
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        printCamera();
+    }
+
 
     // Task 5.7: construct projection and view matrices
     projectionMatrix = perspective(radians(FoV), 4.0f / 3.0f, 0.1f, 100.0f);
@@ -125,4 +111,11 @@ void Camera::update() {
 
     // For the next frame, the "last time" will be "now"
     lastTime = currentTime;
+    
+}
+
+
+void Camera::printCamera() {
+    std::cout << "x= " << position.x << " y= " << position.y << " z= " << position.z << std::endl;
+    std::cout << "hor= " << horizontalAngle << " ver= " << verticalAngle << " fov= " << FoV << std::endl;
 }

@@ -89,3 +89,41 @@ set_target_properties(TINYXML2
 )
 
 
+
+
+### IMGUI ###
+
+set(IMGUI_HEADERS
+        imgui/include/imconfig.h
+        imgui/include/imgui.h
+        imgui/include/imgui_impl_glfw.h
+        imgui/include/imgui_impl_opengl3.h
+        imgui/include/imgui_internal.h
+        imgui/include/imstb_rectpack.h
+        imgui/include/imstb_textedit.h
+        imgui/include/imstb_truetype.h
+        imgui/include/imgui_impl_opengl3_loader.h)
+
+set( IMGUI_SOURCE
+        imgui/src/imgui.cpp
+imgui/src/imgui_demo.cpp
+imgui/src/imgui_draw.cpp
+imgui/src/imgui_impl_glfw.cpp
+imgui/src/imgui_impl_opengl3.cpp
+imgui/src/imgui_tables.cpp
+imgui/src/imgui_widgets.cpp)
+
+include_directories(imgui/include/)
+
+add_library(IMGUI STATIC
+    ${IMGUI_SOURCE}
+    ${IMGUI_HEADERS}
+)
+target_link_libraries(IMGUI)
+set_target_properties(IMGUI
+    PROPERTIES
+    PROJECT_LABEL imgui
+    FOLDER "Libraries"
+)
+
+

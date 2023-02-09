@@ -326,6 +326,9 @@ void indexVBO(
     }
 }
 
+
+//===Drawable=======================================================
+
 Drawable::Drawable(string path) {
     if (path.substr(path.size() - 3, 3) == "obj") {
         loadOBJWithTiny(path.c_str(), vertices, uvs, normals, VEC_UINT_DEFAUTL_VALUE);
@@ -357,6 +360,10 @@ void Drawable::bind() {
 
 void Drawable::draw(int mode) {
     glDrawElements(mode, indices.size(), GL_UNSIGNED_INT, NULL);
+
+
+}void Drawable::drawInstanced(int count,int mode) {
+    glDrawElementsInstanced(mode, indices.size(), GL_UNSIGNED_INT, NULL,count);
 }
 
 void Drawable::createContext() {
@@ -396,6 +403,18 @@ void Drawable::createContext() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementVBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
                  &indices[0], GL_STATIC_DRAW);
+
+    findEdgePoint();
+}
+
+void Drawable::findEdgePoint() {
+
+    vec3 Point;
+    for (int i = 0; i < vertices.size(); i++) {
+        HighVal = vertices[i].y > HighVal ? vertices[i].y : HighVal;
+        RightVal = vertices[i].x > RightVal ? vertices[i].x : RightVal;
+    }
+
 }
 
 /*****************************************************************************/

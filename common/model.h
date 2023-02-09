@@ -73,9 +73,11 @@ public:
     ~Drawable();
 
     void bind();
+    
 
     /* Bind VAO before calling draw */
     void draw(int mode = GL_TRIANGLES);
+    void drawInstanced(int count,int mode = GL_TRIANGLES);
 
 public:
     std::vector<glm::vec3> vertices, normals, indexedVertices, indexedNormals;
@@ -84,8 +86,13 @@ public:
 
     GLuint VAO, verticesVBO, uvsVBO, normalsVBO, elementVBO;
 
+    float HighVal=-10000;
+    float RightVal=-10000;
+
 private:
     void createContext();
+    void findEdgePoint();
+   
 };
 
 /*****************************************************************************/

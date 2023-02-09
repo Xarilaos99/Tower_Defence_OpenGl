@@ -22,6 +22,7 @@ public:
 
     Camera(GLFWwindow* window);
     void update();
+    void printCamera();
 };
 
 #endif
