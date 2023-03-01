@@ -70,8 +70,8 @@ Renderer::Renderer(){
     
 
     
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     //glEnable(GL_CULL_FACE);
 
@@ -83,13 +83,7 @@ Renderer::Renderer(){
     
     
    
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); 
-    (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
+   
     
 
     camera = new Camera(window);
@@ -99,9 +93,23 @@ Renderer::Renderer(){
         vec4{ 1, 1, 1, 1 },
         vec4{ 1, 1, 1, 1 },
         vec4{ 1, 1, 1, 1 },
-        vec3{ 5.8, 5.3, 5.9},
-        43.0f
+        vec3{ -1.1, 6.5, 10.9},
+        58.0f
     );
+
+    glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
+        camera->onMouseMove(xpos, ypos);
+        }
+    );
+
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
 }
 
@@ -111,6 +119,7 @@ Renderer::~Renderer(){
     glDeleteProgram(shaderProgram);
     glDeleteProgram(depthProgram);
     glDeleteProgram(miniProgram);
+    glDeleteProgram(particleShaderProgram);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -158,7 +167,9 @@ void Renderer::createContext(){
     towerTex.shaderCall(shaderProgram, "towerSampler");
     crystalTex.shaderCall(shaderProgram, "crystalSampler");
     robotTex.shaderCall(shaderProgram, "robotSampler");
-    
+
+
+   
 
     
     
@@ -178,6 +189,14 @@ void Renderer::createContext(){
     IsCrystaloc = glGetUniformLocation(shaderProgram, "IsCrystal");
     IsRobotloc = glGetUniformLocation(shaderProgram, "IsRobot");
     IsPlanelocShadow = glGetUniformLocation(depthProgram, "IsPlane");
+
+    IsRedloc = glGetUniformLocation(shaderProgram, "IsRed");
+    IsGreenloc= glGetUniformLocation(shaderProgram, "IsGreen");
+    IsSfairaloc= glGetUniformLocation(shaderProgram, "IsSfaira");
+
+
+    IsSelectedloc= glGetUniformLocation(shaderProgram, "IsSelectPlane");
+    IsObjectloc= glGetUniformLocation(shaderProgram, "IsObject");
 
 
     //DepthMap===========================================================
@@ -217,8 +236,8 @@ void Renderer::createContext(){
 
     }
 
-    sphere = new Drawable(sphere->vertices, sphere->uvs, sphere->normals);
-    suz = new Drawable("suzanne.obj");
+    //sphere = new Drawable(sphere->vertices, sphere->uvs, sphere->normals);
+    //suz = new Drawable("suzanne.obj");
 
     
 
@@ -227,6 +246,64 @@ void Renderer::createContext(){
 
 
     light->shaderCall(shaderProgram);
+
+
+    //Particle System=======================================================
+    particleShaderProgram = loadShaders(
+        "ParticleShader.vertexshader",
+        "ParticleShader.fragmentshader");
+    PVParticleLocation = glGetUniformLocation(particleShaderProgram, "PV");
+
+    onePlane = new Plane(vec3(0.0, 0.0, 0.0));
+    onePlane->CreatePlane();
+
+    
+   
+    oneCrystal = new Crystal(vec3(4.5, 0, 10.5), 0.025);
+    oneCrystal->PassPrograms(particleShaderProgram, shaderProgram, PVParticleLocation);
+    
+    
+    oneRobot = new Robot(onePlane->indexColumnMatrix[4], onePlane->GetLenPath(), 0.2);
+    oneRobot->AccessBarLoc(IsRedloc, IsGreenloc);
+    oneRobot->PassPrograms(particleShaderProgram, shaderProgram, PVParticleLocation);
+
+    
+
+
+    /*
+
+    Towers.push_back(new Tower(vec3(4.5, 0, 5.5), 0.2));
+    //Towers.push_back(new Tower(vec3(2.5, 0, 8.5), 0.2));
+
+    for (int i = 0; i < Towers.size(); i++) {
+        Towers[i]->PassPrograms(particleShaderProgram, PVParticleLocation, shaderProgram);
+        Towers[i]->PassUniform(IsSfairaloc);;
+    }
+    */
+
+    glUniform1i(IsRedloc, 0);
+    glUniform1i(IsGreenloc, 0);
+
+
+    
+
+    for (int i = 0; i < MaxRobots; i++) {
+        
+        Robots.push_back(new Robot(onePlane->indexColumnMatrix[0], onePlane->GetLenPath(), 0.2));
+        Robots[i]->AccessBarLoc(IsRedloc, IsGreenloc);
+        Robots[i]->PassPrograms(particleShaderProgram, shaderProgram, PVParticleLocation);
+        
+    }
+
+    
+
+    //Select Plane=============================================
+    SelectPlane = new Plane(vec3(0.0,0.1,0.0));
+    SelectPlane->CreatePlane();
+    SelectPlane->PassObjectloc(IsObjectloc);
+    
+
+    
 }
 
 
@@ -235,36 +312,51 @@ void Renderer::createContext(){
 
 void Renderer::scene(){
     Time = glfwGetTime();
-    onePlane = new Plane(vec3(0.0, 0.0, 0.0));
-    onePlane->CreatePlane();
+    
 
-    oneRobot = new Robot(onePlane->indexColumnMatrix[0],onePlane->GetLenPath(),0.2);
-    oneTower = new Tower(vec3(4.5,0,5.5), 0.2);
-    oneCrystal = new Crystal(vec3(5.5, 0, 10), 0.01);
+    
+    
+    
+    oneCrystal->AccessBarLoc(IsRedloc, IsGreenloc);
     //onerobot->CreateRobot();
 
     glUniform1i(IsPlaneloc, 0);
     glUniform1i(IsTowerloc, 0);
     glUniform1i(IsCrystaloc, 0);
     glUniform1i(IsRobotloc, 0);
+    glUniform1i(IsSfairaloc, 0);
     glUniform1i(IsPlanelocShadow, 0);
+    glUniform1i(IsSelectedloc, 0);
+
+   
     light->update();
     light->upLoad();
+
+
+    
 
 
     do{
         currentTime = glfwGetTime();
         
-
+        
+        dt = currentTime - Time;
+        //float dt = 0.2f;
+        
 
 
         //camera
-        camera->update();
+       
+        camera->update(SelectSection);
+        
+        
         mat4 projectionMatrix = camera->projectionMatrix;
         mat4 viewMatrix = camera->viewMatrix;
-        glUniform4f(colors, color[0], color[1], color[2], color[3]);
+       
 
-        DepthPass(light->viewMatrix, light->projectionMatrix);
+        
+
+        DepthPass(light->viewMatrix, light->projectionMatrix,dt);
 
         glUseProgram(shaderProgram);
 
@@ -283,134 +375,211 @@ void Renderer::scene(){
 
         
 
-       
+        
         glViewport(0, 0, W_WIDTH, W_HEIGHT);
 
-        // Step 2: Clearing color and depth info
+        // Clearing color and depth info
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        light->update();
+
+        //if u want to change light pos=======================================
+        //light->update();
         light->upLoad();
 
-        // Step 3: Selecting shader program
-
-        Objects(viewMatrix, projectionMatrix,VLocation,PLocation,MLocation);
         
 
-
-        //Update for===============
-           
-        /*
-        if(dt>0.1 && tempindex < 14){
-            time = currentTime;
-            t++;
-            if (t == 5) {
-
-                tempindex++;
-                if(tempindex<14){
-                    vec3 temp = option;
-                    if (LastPos > oneplane->indexColumnMatrix[tempindex]) {
-
-                        option = -posX;
-                    }
-                    else if (LastPos < oneplane->indexColumnMatrix[tempindex]) {
-                        option = posX;
-                    }
-                    else {
-                        option = posZ;
-                        
-
-                    }
-                    t = -3;
-                    LastPos = oneplane->indexColumnMatrix[tempindex];
-                }
-
-            }
-        
-            //cout << (option * robotSpeed).x << "  " << (option * robotSpeed).y << "  " << (option * robotSpeed).z << "  " << endl;
-            currentPos += option * robotSpeed;
-            //cout << currentPos.x << "  " << currentPos.y << "  " << currentPos.z << "  " << endl;
-
-        }
-        */
-        
-        //MyDepthMap.RenderDepthMap(miniProgram, quad, quadTextureSamplerLocation);
-        
-       
-        RenderDepthMap();
-
-        float* t[3] = { &light->targetPosition.x,&light->targetPosition.y,&light->targetPosition.z };
-        float* pos[3] = { &light->lightPosition_worldspace.x,&light->lightPosition_worldspace.y,&light->lightPosition_worldspace.z };
-        float* campos[3] = { &camera->position.x,&camera->position.y,&camera->position.z };
-
-
-        //ImGui=============================================================
-        //*
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        NewFrame();
-        Begin("ImGui window");
-        SetWindowPos(ImVec2(pos_x, pos_y));
-        SetWindowSize(ImVec2(width, height));
-        Text("That's very bad");
-        ColorEdit4("Xrwma", color);
-        SliderFloat("near", &light->nearPlane, 0.1, 50);
-        SliderFloat("far", &light->farPlane, 20, 100);
-        SliderFloat("win", &light->win, 0, 100);
-        SliderFloat("power", &light->power, 0, 100);
-        SliderFloat3("target", *t, 0, 10);
-        SliderFloat3("pos", *pos, 0, 10);
-        SliderFloat3("campos", *campos, 0, 20);
-        End();
-        Render();
-        ImGui_ImplOpenGL3_RenderDrawData(GetDrawData());
+        Objects(viewMatrix, projectionMatrix,VLocation,PLocation,MLocation,dt);
 
 
 
-        glfwSwapBuffers(window);
+        //if u want to see depth Map up right pos==============
+        //RenderDepthMap();
+
+
+
+        //ImGui Window====================================
+        //HelpingWindow();
+        AccessEndGame(oneCrystal->GetEndGame());
         glfwPollEvents();
+        glfwSwapBuffers(window);
+        Time= currentTime;
+        TowerTime += dt;
     }while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-    glfwWindowShouldClose(window) == 0);
+    glfwWindowShouldClose(window) == 0 && !EndGame);
 }
 
 
 
-void Renderer::Objects(mat4 viewMatrix,mat4 projectionMatrix,GLuint VLocation, GLuint PLocation, GLuint MLocation) {
-
-    mat4 ModelMatrix, VPMatrix;
+void Renderer::Objects(mat4 viewMatrix,mat4 projectionMatrix,GLuint VLocation, GLuint PLocation, GLuint MLocation,float dt) {
 
     
+
     glUniform1i(IsPlaneloc, 1);
 
     onePlane->DrawInstanced(mat4(1), projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
     glUniform1i(IsPlaneloc, 0);
     
-   
-
-    ///*
     glUniform1i(IsCrystaloc, 1);
-    oneCrystal->Draw(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
+    if(!game_paused)oneCrystal->Draw(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation,dt,true);
     glUniform1i(IsCrystaloc, 0);
-    oneCrystal->DrawAABB(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
-    oneCrystal->RobotCollusion(*oneRobot);
+    
+
+    //oneCrystal->DrawAABB(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
+    
+   
+  
+    for (int i = 0; i < Towers.size(); i++) {
+        glUniform1i(IsTowerloc, 1);
+        Towers[i]->Draw(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation, dt);
+        glUniform1i(IsTowerloc, 0);
+        //Towers[i]->DrawSfairaAABB(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
+        //*
+        if (!Towers[i]->IsStarting() ) {
+            Towers[i]->DrawEmitter(projectionMatrix * viewMatrix, PVParticleLocation, particleShaderProgram);
+            glUseProgram(shaderProgram);
+
+        }
+        //*/
+        
+    }
+       
+   
+    
+
+
+    //Check How much Robots to Draw Correct;
+    //*
+    if (Robots.size() != 0) {
+        for (int i = 0; i < Robots.size() - 1; i++) {
+            RobCnt += Robots[i]->GetIndex();
+
+        }
+    }
+
+
+   
+   
+    
+   
+    
+    //*
+    if(Robots.size()!=0 ){
+        for (int j = 0; j < RobCnt+1  ; j++) {
+        
+                glUniform1i(IsRobotloc, 1);
+                Robots[j]->Draw(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation, dt, true);
+
+
+                glUniform1i(IsRobotloc, 0);
+                //Robots[j]->DrawAABB(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
+                
+                if(!game_paused) Robots[j]->UpdateRobot(dt, onePlane->indexColumnMatrix);
+
+                if (Robots.size() == 1 && Robots[0]->IsDead()) CheckRobots = false;
+                if (!Robots[j]->IsDead()) {
+                    oneCrystal->RobotCollusion(*Robots[j]);
+                }
+
+                if (Robots[j]->ChechErase()) {
+                    Robots.erase(Robots.begin() + j);
+                    RobCnt--;
+
+                    for (int k = 0; k < Towers.size(); k++) {
+                        ActiveRobot[k] = (ActiveRobot[k] >= j) ? --ActiveRobot[k] : ActiveRobot[k];
+                    }
+                    
+                    
+                   
+
+                }
+
+                
+            
+
+            
+        
+
+
+        }
+    }
+    //*/
+
+    if (CheckRobots && !game_paused && !oneCrystal->IsDead()) {
+        for (int j = 0; j < Towers.size(); j++) {
+
+            if (Towers[j]->GetFirstCheck()) {
+                for (int i = 0; i < RobCnt + 1; i++) {
+                    if (!Robots[i]->IsDead()) {
+                        float dis = GetDistance(Robots[i], Towers[j]);
+                        cout << dis << endl;
+
+                        if (MinDis > dis && dis < 3.0f) {
+                            MinDis = dis;
+                            ActiveRobot[j] = i;
+                            
+                            Towers[j]->ChangeFirstCheck(false);
+                        }
+                        tempCheck = true;
+
+
+                    }
+
+                }
+                CheckRobots = tempCheck;
+            }
+            else {
+
+                if (Towers[j]->RobotCollusion(*Robots[ActiveRobot[j]], dt)) {
+                    if (Robots[ActiveRobot[j]]->IsDead()) {
+                        for (int k = 0; k < Towers.size(); k++) {
+                            if (ActiveRobot[k] == ActiveRobot[j]) {
+                                Towers[k]->Starting();
+                                Towers[k]->ChangeFirstCheck(true);
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+
+
+    }
+    else if(!game_paused){
+        for (int j = 0; j < Towers.size(); j++) {
+            Towers[j]->colussion = false;
+            Towers[j]->Starting();
+
+        }
+
+    }
+
+   
+ 
+    
+
+
+
+
+    
+    MinDis = 100.0f;
+    tempCheck = false;
+    
+
     
 
    
+    if (SelectSection) {
+        glUniform1i(IsSelectedloc, 1);
 
-    glUniform1i(IsRobotloc, 1);
-    oneRobot->Draw(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
-    oneRobot->UpdateRobot(currentTime, Time, onePlane->indexColumnMatrix);
+        SelectPlane->Draw(mat4(1), projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
+        glUniform1i(IsSelectedloc, 0);
+    }
 
-    glUniform1i(IsRobotloc, 0);
-    oneRobot->DrawAABB(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
+   
 
-    glUniform1i(IsTowerloc, 1);
-    oneTower->Draw(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
-    glUniform1i(IsTowerloc, 0);
-    oneTower->DrawSfairaAABB(projectionMatrix, viewMatrix, VLocation, MLocation, PLocation);
-    oneTower->RobotCollusion(*oneRobot);
-
-
-
+    /*
     sphere->bind();
     
 
@@ -427,13 +596,104 @@ void Renderer::Objects(mat4 viewMatrix,mat4 projectionMatrix,GLuint VLocation, G
     glUniformMatrix4fv(PLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
     glUniformMatrix4fv(MLocation, 1, GL_FALSE, &ModelMatrix[0][0]);
     suz->draw();
+    //*/
     
-    cout << oneRobot->GetHealth() << endl;
+    
 
     
 
 }
+
+
+
 void Renderer::pollKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods){
+
+    if (key == GLFW_KEY_GRAVE_ACCENT && action == GLFW_PRESS) {
+        if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_NORMAL) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            camera->active = true;
+        }
+        else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            camera->active = false;
+        }
+
+    }
+
+    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+        game_paused = !game_paused;
+    }
+
+
+    
+   
+    if (TowerTime > 5) {
+        if (Towers.size() < 3) {
+
+            if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+                SelectSection = !SelectSection;
+            }
+
+
+
+
+            if (SelectSection) {
+                if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+                    if (SelectPlane->ZOffset != 0.0) {
+                        SelectPlane->ZOffset -= 1.0;
+                    }
+
+                }
+
+                if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+                    if (SelectPlane->ZOffset != 9.0) {
+                        SelectPlane->ZOffset += 1.0;
+                    }
+
+                }
+
+                if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+                    if (SelectPlane->XOffset != 9.0) {
+                        SelectPlane->XOffset += 1.0;
+
+                    }
+
+                }
+
+                if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+                    if (SelectPlane->XOffset != 0.0) {
+                        SelectPlane->XOffset -= 1.0;
+                    }
+
+                }
+                SelectPlane->Update();
+
+                if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+                    SelectSection = !SelectSection;
+                    if (SelectPlane->MakeTower()) {
+                        Tower* t = new Tower(vec3(SelectPlane->XOffset + .5, 0, SelectPlane->ZOffset + .5), 0.2);
+                        t->PassPrograms(particleShaderProgram, PVParticleLocation, shaderProgram);
+                        t->PassUniform(IsSfairaloc);
+                        Towers.push_back(t);
+                        TowerTime = 0;
+                        
+
+                    }
+                    else cout << "Apagoreumenh Thesi" << endl;
+                    SelectPlane->XOffset = 0.0;
+                    SelectPlane->ZOffset = 0.0;
+                    delete[] ActiveRobot;
+                    ActiveRobot = new int[Towers.size()]();
+
+                }
+
+            }
+        }
+        else cout << "Den mporeis na ftiaxeis perissoterous Purgous" << endl;
+    }
+    else cout << "Den mporeis akoma na ftiajeis Purgo" << endl;
+
+
 
 }
 
@@ -499,7 +759,7 @@ void RenderDepthMap() {
 
 }
 
-void DepthPass(mat4 viewMatrix,mat4 projectionMatrix) {
+void DepthPass(mat4 viewMatrix,mat4 projectionMatrix,float dt) {
 
 
 
@@ -525,29 +785,26 @@ void DepthPass(mat4 viewMatrix,mat4 projectionMatrix) {
 
 
     glUniform1i(IsCrystaloc, 1);
-    oneCrystal->Draw(projectionMatrix, viewMatrix, shadowViewLocation, shadowModelLocation, shadowProjectionLocation);
+    if (!oneCrystal->IsDead()) oneCrystal->Draw(projectionMatrix, viewMatrix, shadowViewLocation, shadowModelLocation, shadowProjectionLocation,dt,false,false);
     glUniform1i(IsCrystaloc, 0);
 
-    glUniform1i(IsRobotloc, 1);
-    oneRobot->Draw(projectionMatrix, viewMatrix, shadowViewLocation, shadowModelLocation, shadowProjectionLocation);
-    glUniform1i(IsRobotloc, 0);
+   
 
+    for (int i = 0; i < Towers.size(); i++) {
 
-    glUniform1i(IsTowerloc, 1);
-    oneTower->Draw(projectionMatrix, viewMatrix, shadowViewLocation, shadowModelLocation, shadowProjectionLocation);
-    glUniform1i(IsTowerloc, 0);
+        Towers[i]->Draw(projectionMatrix, viewMatrix, shadowViewLocation, shadowModelLocation, shadowProjectionLocation, dt,false);
+    }
+  
+    if (Robots.size() != 0){
+        for (int i = 0; i < RobCnt + 1; i++) {
+
+            if(!Robots[i]->IsDead()) Robots[i]->Draw(projectionMatrix, viewMatrix, shadowViewLocation, shadowModelLocation, shadowProjectionLocation, dt, false,false);
+        }
+
+        RobCnt = 0;
+    }
+   
     
-    
-
-    suz->bind();
-
-    ModelMatrix = translate(mat4(), vec3(7.5, 0.5, 7.5)) * glm::rotate(mat4(), (float)3.14 / 2, vec3(0.0, -1.0, 0.0)) * scale(mat4(), vec3(0.5, 0.5, 0.5));
-    glUniformMatrix4fv(shadowViewLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-    glUniformMatrix4fv(shadowProjectionLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
-    glUniformMatrix4fv(shadowModelLocation, 1, GL_FALSE, &ModelMatrix[0][0]);
-    suz->draw();
-
-
 
     
 
@@ -562,7 +819,50 @@ void DepthPass(mat4 viewMatrix,mat4 projectionMatrix) {
 
 
 
+void Renderer::HelpingWindow() {
+    float* t[3] = { &light->targetPosition.x,&light->targetPosition.y,&light->targetPosition.z };
+    float* pos[3] = { &light->lightPosition_worldspace.x,&light->lightPosition_worldspace.y,&light->lightPosition_worldspace.z };
+    float* campos[3] = { &camera->position.x,&camera->position.y,&camera->position.z };
 
+
+    //ImGui=============================================================
+    //*
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    NewFrame();
+    Begin("ImGui window");
+    //SetWindowPos(ImVec2(pos_x, pos_y));
+    //SetWindowSize(ImVec2(width, height));
+    Text("That's very bad");
+    //ColorEdit4("Xrwma", color);
+    SliderFloat("near", &light->nearPlane, 0.1, 50);
+    SliderFloat("far", &light->farPlane, 20, 100);
+    SliderFloat("win", &light->win, 0, 100);
+    SliderFloat("power", &light->power, 0, 100);
+    SliderFloat3("target", *t, 0, 10);
+    SliderFloat3("pos", *pos, 0, 10);
+    SliderFloat3("campos", *campos, 0, 20);
+
+    //ColorEdit4("Color Begin", glm::value_ptr(oneTower->TailParticles->ColorBegin));
+    //ColorEdit4("Color  End", glm::value_ptr(oneTower->TailParticles->ColorEnd));
+    SliderFloat("XOffset", &SelectPlane->XOffset,0.0, 10.0);
+    //SliderFloat("Size", &oneCrystal->sizeBar, 0.01, 0.3);
+
+
+    ImGui::Text("Performance %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+    End();
+    Render();
+    ImGui_ImplOpenGL3_RenderDrawData(GetDrawData());
+}
+
+
+
+
+float GetDistance(Robot* rob, Tower* tow) {
+    glm::vec3 dis = tow->GetPos()-rob->GetCenter();
+    return CalcLength(dis);
+}
 
 
 

@@ -10,6 +10,10 @@ uniform sampler2D towerSampler;
 uniform sampler2D crystalSampler;	
 uniform sampler2D robotSampler;	
 
+
+uniform sampler2D tempSampler;	
+
+
 uniform sampler2D shadowMapSampler;
 in mat4 Vout;	
 
@@ -28,6 +32,12 @@ flat in int isPlane;
 flat in int isTower;
 flat in int isCrystal;
 flat in int isRobot;
+flat in int isRed;
+flat in int isGreen;
+flat in int isSfaira ;
+
+flat in int isSelectPlane;
+flat in int isObject;
 
 
 flat in int RoadTex;
@@ -41,9 +51,16 @@ in vec2 vertex_UV;
 
 out vec4 frag_colour;
 
+
+vec4 Ks;
+vec4 Kd;
+vec4 Ka;
+float Ns;
+
+
 void main () {
 
-	vec4 main_texture=vec4(1.,1.,1.,1.);
+	vec4 main_texture=vec4(0,1.,1.,.5);
 
 	
 	if(isPlane==1){
@@ -75,8 +92,35 @@ void main () {
 	
 	}
 
+    if(isRed==1){
+	
+		main_texture = vec4(1.,0,0,1.);
+	
+	}
+
+    if(isGreen==1){
+	
+		main_texture = vec4(0,1,0,1.);
+	
+	}
+    
+    if(isSelectPlane==1){
+        if(isObject==1){
+            main_texture = vec4(1.,0, 0, 0.5);
+        }
+        else{
+            main_texture = vec4(0,1.0, 0, 0.5);
+        }
+	
+		
+	
+	}
+
 
     float shadow;
+    vec4 La=light.La;
+    vec4 Ls=light.Ls;
+    vec4 Ld=light.Ld;
 
 	vec3 projCoords =   vertex_position_lightspace.xyz/vertex_position_lightspace.w;
 	//vec3 projCoords =   vertex_position_worldspace;
@@ -124,28 +168,76 @@ void main () {
     shadow = 1.0-shadow;
 
 
-	vec4 Ks = vec4(0.5,0.5,0.5, 1.0);
-    vec4 Kd = vec4(main_texture.rgb, 1.0);
-    vec4 Ka = vec4(0.1, 0.1, 0.1, 1.0);
-    float Ns = 10;
+    if(isSfaira==1){
+            /*
+            Ks=vec4(0.296648, 0.296648, 0.296648, 0.922 );
+            Kd=vec4(1 ,0.829, 0.829, 0.922 );
+            Ka=vec4(0.25 ,0.20725, 0.20725, 0.922 );
+            Ns = 11.264;
 
 
-	vec4 Ia = light.La * Ka;
 
-    vec4 Id = light.Ld * Kd * cosTheta; 
+            
+            Ks=vec4(0.774597,0.774597,0.774597,1.0);
+            Kd=vec4(00.4,0.4,0.4,1.0);
+            Ka=vec4(0.25 ,0.25, 0.25,1.0);
+            Ns = 76.8;
+           
+            
+            Ka=vec4(0.1745 ,0.01175 ,0.01175,0.55 );
+            Kd=vec4(0.61424 ,0.04136 ,0.04136,0.55);
+            Ks=vec4(0.727811 ,0.626959 ,0.626959,0.55);
+            Ns = 76.8;
+            */
 
-    // model specular intensity (Is)
+            Ks=vec4(0.297254, 0.30829 ,0.306678 ,0.8 );
+            Kd=vec4(0.396, 0.74151,0.69102, 0.8);
+            Ka=vec4(0.1 ,0.18725, 0.1745, 0.8 );
+            Ns = 12.8;
+            La=vec4(242 / 255.0f,0 / 255.0f,243 / 255.0f, 1.0f);
+            Ld=vec4(242 / 255.0f,0 / 255.0f,243 / 255.0f, 1.0f);
+            Ls=vec4(242 / 255.0f,0 / 255.0f,243 / 255.0f, 1.0f);
+
+            
+
+    }
+    else if(isSfaira==2){
+            /*
+            Ka=vec4(0.02 ,0.02 ,0.02, 1.0);
+            Kd=vec4(0.01 ,0.01 ,0.01, 1);
+            Ks=vec4(0.4 ,0.4 ,0.4 ,1);
+            Ns = 10;
+            */
+            Ka=vec4(0.05375 ,0.05 ,0.06625 ,0.82 );
+            Kd=vec4(0.18275 ,0.17 ,0.22525, 0.82 );
+            Ks=vec4(0.332741 ,0.328634, 0.346435, 0.82 );
+            Ns = 38.4;
+    }
+    else{
+	    Ks = vec4(0.5,0.5,0.5, 1.0);
+        Kd = vec4(main_texture.rgb, 1.0);
+        Ka = vec4(0.1, 0.1, 0.1, 1.0);
+        Ns = 10;
+    }
+
+
+	vec4 Ia = La * Ka;
+
+    vec4 Id = Ld * Kd * cosTheta; 
+
+   
     vec3 R = reflect(-L, N);
     vec3 E = normalize(- vertex_position_cameraspace);
     float cosAlpha = clamp(dot(E, R), 0, 1);
     float specular_factor = pow(cosAlpha, Ns);
-    vec4 Is = light.Ls * Ks * specular_factor;
+    vec4 Is = Ls * Ks * specular_factor;
 
     //model the light distance effect
     float distance = length(light.lightPosition_worldspace - vertex_position_worldspace);
-    float distance_sq = distance * distance;
+    float distance_sq = distance * distance/2.0f;
 
+   
 	frag_colour = vec4(Ia + shadow * Id * light.power / distance_sq + shadow*Is * light.power / distance_sq);
-  //frag_colour = vec4(0.3,0.5,0.4,1.0);
+  
 
 } 

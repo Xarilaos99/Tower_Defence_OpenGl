@@ -24,23 +24,79 @@ Crystal::Crystal(vec3 pos,float size){
 
     HightPoint = CrystalModel->HighVal;
     RightPoint = CrystalModel->RightVal;
-
+    CrystalModelMatrix = translate(mat4(), CurrentPos) * CrystalScaleMatrix;
+    CenterPoint = vec3(CrystalModelMatrix * vec4(0, HightPoint / 2, 0, 1));
     CreateAABB();
 
+    DeathParts = new Drawable("earth.obj");
+
+    DeathEmitter = new SphericalEmitter(DeathParts, 200, CenterPoint, DeathBeginCol, DeathEndCol, RadiusMax);
+    LifeBar = new Drawable("health_bar_green.obj");
 }
 
-void Crystal::Draw(glm::mat4 proj, glm::mat4 view, GLuint Vloc, GLuint Mloc, GLuint Ploc){
-    CrystalModel->bind();
-	//mat4 ModelMatrix = translate(mat4(), CurrentPos) * ;
-    CrystalModelMatrix= translate(mat4(), CurrentPos)* CrystalScaleMatrix;
-	glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
-	glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);
-	glUniformMatrix4fv(Mloc, 1, GL_FALSE, &CrystalModelMatrix[0][0]);
-	CrystalModel->draw();
+void Crystal::Draw(glm::mat4 proj, glm::mat4 view, GLuint Vloc, GLuint Mloc, GLuint Ploc,float dt,bool drawHealth,bool DrawParts){
+
+    if (IsDead() && DrawParts) {
+        if (AnimationTime >= 0) {
+            DeathEmitter->updateParticles(0, dt);
+            glUseProgram(particleShaderProgram);
+            DeathEmitter->bindAndUpdateBuffers(proj * view, PVParticleLocation);
+            glUseProgram(shaderProgram);
+            AnimationTime--;
+
+        }
+        else {
+            stopGame = true;
+        }
+        
+
+    }
+    else {
+        CrystalModel->bind();
+        //mat4 ModelMatrix = translate(mat4(), CurrentPos) * ;
+        CrystalModelMatrix = translate(mat4(), CurrentPos) * CrystalScaleMatrix;
+        glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);
+        glUniformMatrix4fv(Mloc, 1, GL_FALSE, &CrystalModelMatrix[0][0]);
+        CrystalModel->draw();
 
 
-    CrystalMinPoint = vec3(CrystalModelMatrix * vec4(AABBVerts[0], 1.0));
-    CrystalMaxPoint = vec3(CrystalModelMatrix * vec4(AABBVerts[32], 1.0));
+
+        if (drawHealth) {
+
+        
+            glUniform1i(IsRedloc, 1);
+
+            LifeBar->bind();
+            vec3 top = vec3(CrystalModelMatrix * vec4(-RightPoint, HightPoint, 0, 1));
+            mat4 LifeBarMat = translate(mat4(), top) * glm::scale(glm::mat4(), glm::vec3(sizeBar, sizeBar, sizeBar));
+            glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
+            glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);
+            glUniformMatrix4fv(Mloc, 1, GL_FALSE, &LifeBarMat[0][0]);
+
+            LifeBar->draw();
+
+            glUniform1i(IsRedloc, 0);
+
+            glUniform1i(IsGreenloc, 1);
+            LifeBar->bind();
+            top = vec3(CrystalModelMatrix * vec4(-RightPoint-0.05, HightPoint, 0, 1));
+            float life = health / 1000.f;
+            LifeBarMat = translate(mat4(), top) *  glm::scale(glm::mat4(), glm::vec3((sizeBar + 0.002) * life, sizeBar + 0.002, sizeBar + 0.002));
+            glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
+            glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);
+            glUniformMatrix4fv(Mloc, 1, GL_FALSE, &LifeBarMat[0][0]);
+
+            LifeBar->draw();
+            glUniform1i(IsGreenloc, 0);
+        }
+
+
+        CrystalMinPoint = vec3(CrystalModelMatrix * vec4(AABBVerts[0], 1.0));
+        CrystalMaxPoint = vec3(CrystalModelMatrix * vec4(AABBVerts[32], 1.0));
+    }
+    
+    
 }
 
 
@@ -134,14 +190,12 @@ void Crystal::RobotCollusion(Robot& TempRobot) {
    
 
     if (CheckColussion(TempRobot) > 0) {
-        cout << "tempCrystal" << endl;
-        Attack(10);
+        //cout << "tempCrystal" << endl;
+        Attack(5);
         //SfairaPos = SfairaStartingPos;
-        cout << health<<"\n" << endl;
+        //cout << health<<"\n" << endl;
     }
-    //cout << CheckColussion(TempRobot)<<endl;
-    //cout << SfairaPos.x << "  " << SfairaPos.y << "  " << SfairaPos.z << "  " << endl;
-
+   
 }
 
 
@@ -155,5 +209,24 @@ float Crystal::CheckColussion(Robot& TempRobot) {
 
     return xOverlap * yOverlap * zOverlap;
 
+
+}
+
+
+bool Crystal::IsDead(){
+    return (health <= 0);
+}
+
+void Crystal::PassPrograms(GLuint ParticleProgram, GLuint RenderrerProgram,GLuint PVloc)
+{
+    particleShaderProgram = ParticleProgram;
+    shaderProgram = RenderrerProgram;
+    PVParticleLocation = PVloc;
+}
+
+
+void Crystal::AccessBarLoc(GLuint& IsRed, GLuint& IsGreen) {
+    IsRedloc = IsRed;
+    IsGreenloc = IsGreen;
 
 }

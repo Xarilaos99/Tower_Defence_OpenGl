@@ -17,6 +17,12 @@ uniform int IsTower;
 uniform int IsPlane;
 uniform int IsCrystal;
 uniform int IsRobot;
+uniform int IsGreen;
+uniform int IsRed;
+uniform int IsSfaira;
+
+uniform int IsSelectPlane;
+uniform int IsObject;
 
 //out vec2 uv;
 
@@ -26,6 +32,12 @@ flat out int isTower;
 flat out int isPlane;
 flat out int isCrystal;
 flat out int isRobot;
+flat out int isRed;
+flat out int isGreen;
+flat out int isSfaira;
+
+flat out int isSelectPlane;
+flat out int isObject;
 
 
 out mat4 Vout;
@@ -63,27 +75,21 @@ void main() {
 		
 
 	}
-	if(IsTower==1){
-			isTower=IsTower;
-	}
-	else{
-		isTower=0;
-	}
+
+	isTower=IsTower;
+	isCrystal=IsCrystal;
+	isRobot=IsRobot;		
+	isRed=IsRed;		
+	isGreen=IsGreen;		
+	isSfaira=IsSfaira;
+	isSelectPlane=IsSelectPlane;
+	isObject=IsObject;
 	
-	if(IsCrystal==1){
-		isCrystal=IsCrystal;
-	}
-	else{
-		isCrystal=0;
-	}
 	
-	if(IsRobot==1){
-		isRobot=IsRobot;
-			
-	}
-	else{
-		isRobot=0;
-	}
+	
+
+
+
 	Vout=V;
 	
 

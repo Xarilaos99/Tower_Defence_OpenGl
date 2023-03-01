@@ -3,6 +3,13 @@
 
 #include <glm/glm.hpp>
 
+
+struct CurrentCamera {
+    glm::vec3 Pos;
+    float horizontalAngle;
+    float verticalAngle;
+};
+
 class Camera {
 public:
     GLFWwindow* window;
@@ -20,9 +27,16 @@ public:
     float mouseSpeed;
     float fovSpeed;
 
+    bool active = true;
+    //bool SelectMode = false;
+
     Camera(GLFWwindow* window);
-    void update();
+    void update(bool SelectMode);
+    void onMouseMove(double xPos, double yPos);
     void printCamera();
+    void SelectionMode();
+    CurrentCamera Normal, Select;
+    CurrentCamera* Current;
 };
 
 #endif

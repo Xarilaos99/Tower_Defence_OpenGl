@@ -24,7 +24,7 @@ Light::Light(GLFWwindow* window,
     farPlane = 100.0;
     win = 5;
 
-    targetPosition = glm::vec3(4.5, 0.0, 4.5);
+    targetPosition = glm::vec3(7.9, 0.0, 3.4);
     
     direction = normalize(targetPosition - lightPosition_worldspace);
 
@@ -62,20 +62,7 @@ void Light::update() {
         lightPosition_worldspace -= lightSpeed * vec3(0.0, 1.0, 0.0);
     }
     
-    /*
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        power += 1;
-    }
     
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
-        nearPlane += 1;
-    }
-
-
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-        farPlane -= 1;
-    }
-    */
 
    
     

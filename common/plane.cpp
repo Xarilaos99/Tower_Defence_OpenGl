@@ -3,6 +3,7 @@
 #include "model.h"
 #include <iostream>
 #include <random>
+#include <glm/gtc/matrix_transform.hpp>
 
 
 using namespace glm;
@@ -22,7 +23,8 @@ Plane::Plane(vec3 pos){
 
 
 void Plane::CreatePlane(){
-    vector<vec3> planeVertices = {
+
+    planeVertices = {
         position,
         position+positionZ,
         position+positionDiag,
@@ -32,8 +34,10 @@ void Plane::CreatePlane(){
 
 	};
 
+	FirstVertices = planeVertices;
+
 	// plane normals
-	vector<vec3> planeNormals = {
+	planeNormals = {
 		vec3(0.0f, 1.0f, 0.0f),
 		vec3(0.0f, 1.0f, 0.0f),
 		vec3(0.0f, 1.0f, 0.0f),
@@ -43,7 +47,7 @@ void Plane::CreatePlane(){
 	};
 
 	// plane uvs
-	vector<vec2> planeUVs = {
+	planeUVs = {
 		vec2(0.0f, 0.0f),
 		vec2(0.0f, 1.0f),
 		vec2(1.0f, 1.0f),
@@ -51,6 +55,7 @@ void Plane::CreatePlane(){
 		vec2(1.0f, 0.0f),
 		vec2(0.0f, 0.0f),
 	};
+
     plane=new Drawable(planeVertices,planeUVs,planeNormals);
 	
  
@@ -69,7 +74,10 @@ void Plane::CreateTerrainWithIndex() {
 	
 	for (int i = 0; i < len; i++) {
 		texSel[10 * indexRowMatrix[i] + indexColumnMatrix[i]] = 1;
+		texSel[100 + i] = 0;
 	}
+
+	
 
 	
 
@@ -151,12 +159,18 @@ void Plane::CreateTerrain() {
 	}
 }
 
-void Plane::Draw(mat4 model,mat4 proj,mat4 view,GLuint VPloc,GLuint Mloc){
+void Plane::Draw(mat4 model,mat4 proj,mat4 view,GLuint Ploc,  GLuint Vloc,GLuint Mloc){
+
+	int t = texSel[10 * (int)ZOffset + (int)XOffset];
+	glUniform1i(IsObjectloc, t);
+
 	plane->bind();
-	mat4 terrainModelMatrix = model;
-	mat4 terrainVP = proj * view;
-	glUniformMatrix4fv(VPloc, 1, GL_FALSE, &terrainVP[0][0]);
-	glUniformMatrix4fv(Mloc, 1, GL_FALSE, &terrainModelMatrix[0][0]);
+	mat4 ModelMat = translate(mat4(), position);
+	glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
+	glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);
+	glUniformMatrix4fv(Mloc, 1, GL_FALSE, &model[0][0]);
+
+	
 	plane->draw();
 }
 
@@ -169,9 +183,9 @@ void Plane::DrawInstanced(mat4 model, mat4 proj, mat4 view, GLuint Vloc, GLuint 
 
 
 	//create arrays for instancing
-	glm::vec3 offset[100];
 	
-	for (float i = 0.0; i < 10; i++) {
+	
+	for (float i = 0.0; i < 11; i++) {
 		for (float j = 0.0; j < 10; j++) {
 			//cout << i << "  " << j << endl;
 			offset[(int)i * 10 + (int)j] = positionX * j + positionZ * i;
@@ -182,7 +196,7 @@ void Plane::DrawInstanced(mat4 model, mat4 proj, mat4 view, GLuint Vloc, GLuint 
 	unsigned int instanceVBO;
 	glGenBuffers(1, &instanceVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 100, &offset[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 110, &offset[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribDivisor(3, 1);
@@ -190,7 +204,7 @@ void Plane::DrawInstanced(mat4 model, mat4 proj, mat4 view, GLuint Vloc, GLuint 
 	unsigned int texVBO;
 	glGenBuffers(1, &texVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, texVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 100, &this->texSel[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 110, &this->texSel[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(4);
 	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribDivisor(4, 1);
@@ -206,5 +220,27 @@ void Plane::DrawInstanced(mat4 model, mat4 proj, mat4 view, GLuint Vloc, GLuint 
 	glUniformMatrix4fv(Mloc, 1, GL_FALSE, &model[0][0]);
 
 
-	plane->drawInstanced(100);
+	plane->drawInstanced(110);
 }
+
+
+
+
+
+//only for select plane====================================
+void Plane::Update() {
+
+	for (int i = 0; i < planeVertices.size(); i++) {
+		planeVertices[i] = FirstVertices[i] + (positionX * XOffset + positionZ * ZOffset);
+	}
+	plane = new Drawable(planeVertices, planeUVs, planeNormals);
+	
+}
+
+
+bool Plane::MakeTower() {
+	int t = texSel[10 * (int)ZOffset + (int)XOffset];
+	texSel[10 * (int)ZOffset + (int)XOffset] = 1;
+	return  t == 1 ? false : true;
+}
+

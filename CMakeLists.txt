@@ -129,6 +129,16 @@ add_executable(${Myexe}
   common/tower.h
   common/crystal.cpp
   common/crystal.h
+  common/particles.cpp
+  common/particles.h
+  common/sfaira.cpp
+  common/sfaira.h
+  common/TailEmitter.cpp
+  common/TailEmitter.h
+  common/SphericalEmitter.cpp
+  common/SphericalEmitter.h
+  common/PolarEmitter.cpp
+  common/PolarEmitter.h
 
   ${Mydir}/Assets/fiery.bmp
   ${Mydir}/Assets/road.bmp
@@ -142,6 +152,9 @@ add_executable(${Myexe}
   ${Mydir}/Depth.vertexshader
   ${Mydir}/Quad.fragmentshader
   ${Mydir}/Quad.vertexshader
+  
+  ${Mydir}/ParticleShader.fragmentshader
+  ${Mydir}/ParticleShader.vertexshader
   
   )
 target_link_libraries(${Myexe}

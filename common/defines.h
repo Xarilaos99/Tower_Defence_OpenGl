@@ -36,6 +36,8 @@
     #include <common/robot.h>
     #include <common/crystal.h>
     #include <common/tower.h>
+   
+    #include <common/particles.h>
     
 
     using namespace std;
@@ -43,8 +45,19 @@
     using namespace ImGui;
     using namespace ogl;
 
-    #define W_WIDTH 1024
-    #define W_HEIGHT 1024
+
+    //MY TV==============================================
+    //*
+    #define W_WIDTH 1366
+    #define W_HEIGHT 766
+    //*/
+
+    //MY Laptop==============================================
+    /*
+    #define W_WIDTH 1920
+    #define W_HEIGHT 1080
+    //*/
+
     #define SHADOW_WIDTH 1024
     #define SHADOW_HEIGHT 1024
     #define TITLE "My Tower Defence"
@@ -63,6 +76,8 @@
     
     float currentTime;
     float Time;
+    float TowerTime=6.0f;
+    float dt;
 
 
     //===========Shader Stuff=================================
@@ -78,6 +93,8 @@
     GLuint VLocation, MLocation, PLocation;
     GLuint IsPlaneloc, IsTowerloc;
     GLuint IsCrystaloc, IsRobotloc;
+    GLuint IsGreenloc, IsRedloc;
+    GLuint IsSfairaloc,IsSelectedloc,IsObjectloc;
 
     //============================================
 
@@ -105,6 +122,7 @@
 
 
 
+
     //===============MY Objects=============================
 
 
@@ -129,13 +147,13 @@
 
 
 
-    float color[4] = { 0.8f,0.5f,0.2f,1.0f };
+    
     //===========Light====================================================================
     Light* light;
 
     float width = 400;
     float height = 300;
-    float pos_x = 20;
+    float pos_x = 600;
     float pos_y = 20;
 
 
@@ -144,7 +162,7 @@
     GLuint quadTextureSamplerLocation;
 
     //DepthMap====================================================================
-    //DepthMap=============================
+
     GLuint depthProgram;
     GLuint miniProgram;
 
@@ -161,7 +179,7 @@
 
 
     void DepthMapShaderCall();
-    void DepthPass(mat4 viewMatrix, mat4 projectionMatrix);
+    void DepthPass(mat4 viewMatrix, mat4 projectionMatrix,float dt);
     void RenderDepthMap();
 
 
@@ -169,6 +187,50 @@
     Drawable *sphere;
     Drawable *suz;
 
+
+    //Particle System====================================================================
+    //Shaders 
+    
+    GLuint particleShaderProgram;
+    GLuint PVParticleLocation;
+
+    //Orbit Vars=================
+    bool Col=false;
+    int update=-1;
+
+    //Inderaction Robots vs Towers=================
+    //vectors of robots and Tower
+
+    std::vector<Robot *> Robots;
+    std::vector<Tower *> Towers;
+
+    int MaxRobots = 5;
+    int RobCnt=0;
+  
+    float GetDistance(Robot* rob, Tower* tow);
+   
+    float CalcLength(glm::vec3 myvec) {
+        return sqrt(pow(myvec.x, 2) + pow(myvec.y, 2) + pow(myvec.z, 2));
+    }
+  
+
+    float MinDis=10000.0f;
+    int* ActiveRobot= new int[2]();
+    
+    bool CheckRobots = true;
+    bool tempCheck = false;
+
+
+    //Select Part =============================================
+    bool SelectSection=false;
+    Plane* SelectPlane;
+    
+
+
+
+    //Game=========================================
+    bool game_paused = false;
+    
 
 
    
