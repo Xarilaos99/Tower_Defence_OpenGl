@@ -32,7 +32,7 @@ Robot::Robot(int lastpos,int PathPieces,float size ) {
 
     LifeBar = new Drawable("Assets/health_bar_green.obj");
     DeathParts = new Drawable("Assets/earth.obj");
-    health = 500;
+    health = 400;
    // DeathEmitter = new SphericalEmitter(DeathParts, 200, CenterPoint, DeathBeginCol, DeathEndCol, RadiusMax);
     
    
@@ -180,7 +180,7 @@ void Robot::Draw(mat4 proj, mat4 view, GLuint Vloc, GLuint Mloc, GLuint Ploc,flo
             glUniform1i(IsGreenloc, 1);
             LifeBar->bind();
             top = vec3(RobotModelMatrix * vec4(-RightPoint-0.05, HightPoint, 0, 1));
-            float life = health / 500.0f;
+            float life = health / 400.0f;
             LifeBarMat = translate(mat4(),top) * RobotRotateMatrix * glm::scale(glm::mat4(), glm::vec3((sizeBar+0.002)* life, sizeBar + 0.002, sizeBar + 0.002));
             glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
             glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);

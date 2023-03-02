@@ -481,7 +481,7 @@ void Renderer::Objects(mat4 viewMatrix,mat4 projectionMatrix,GLuint VLocation, G
                     RobCnt--;
 
                     for (int k = 0; k < Towers.size(); k++) {
-                        ActiveRobot[k] = (ActiveRobot[k] >= j) ? --ActiveRobot[k] : ActiveRobot[k];
+                        ActiveRobot[k] = (ActiveRobot[k] >= Robots.size()) ? --ActiveRobot[k] : ActiveRobot[k];
                     }
                     
                     
@@ -624,7 +624,7 @@ void Renderer::pollKeyboard(GLFWwindow* window, int key, int scancode, int actio
 
     
    
-    if (TowerTime > 5) {
+    if (TowerTime >8.5) {
         if (Towers.size() < 3) {
 
             if (key == GLFW_KEY_T && action == GLFW_PRESS) {

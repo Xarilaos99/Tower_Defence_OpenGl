@@ -48,8 +48,8 @@ Tower::Tower(vec3 pos,float size){
     CurrentSfaira = NormalSfaira;
     TailParticles = NormalParticles;
 
-    BigSfaira->ChangeAttack(50);
-    NormalSfaira->ChangeAttack(30);
+    BigSfaira->ChangeAttack(150);
+    NormalSfaira->ChangeAttack(50);
 
 }
 

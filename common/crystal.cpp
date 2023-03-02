@@ -17,7 +17,7 @@ Crystal::Crystal(){
 }
 
 Crystal::Crystal(vec3 pos,float size){
-    health = 1000;
+    health = 2000;
     CurrentPos=pos;
     CrystalScaleMatrix = glm::scale(glm::mat4(), glm::vec3(size, size, size));
     CrystalModel=new Drawable("Assets/crystal.obj");
@@ -81,7 +81,7 @@ void Crystal::Draw(glm::mat4 proj, glm::mat4 view, GLuint Vloc, GLuint Mloc, GLu
             glUniform1i(IsGreenloc, 1);
             LifeBar->bind();
             top = vec3(CrystalModelMatrix * vec4(-RightPoint-0.05, HightPoint, 0, 1));
-            float life = health / 1000.f;
+            float life = health / 2000.f;
             LifeBarMat = translate(mat4(), top) *  glm::scale(glm::mat4(), glm::vec3((sizeBar + 0.002) * life, sizeBar + 0.002, sizeBar + 0.002));
             glUniformMatrix4fv(Vloc, 1, GL_FALSE, &view[0][0]);
             glUniformMatrix4fv(Ploc, 1, GL_FALSE, &proj[0][0]);
