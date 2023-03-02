@@ -624,7 +624,7 @@ void Renderer::pollKeyboard(GLFWwindow* window, int key, int scancode, int actio
 
     
    
-    if (TowerTime >8.3) {
+    if (TowerTime >8.5) {
         if (Towers.size() < 3) {
 
             if (key == GLFW_KEY_T && action == GLFW_PRESS) {
