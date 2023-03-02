@@ -20,7 +20,7 @@ Crystal::Crystal(vec3 pos,float size){
     health = 1000;
     CurrentPos=pos;
     CrystalScaleMatrix = glm::scale(glm::mat4(), glm::vec3(size, size, size));
-    CrystalModel=new Drawable("crystal.obj");
+    CrystalModel=new Drawable("Assets/crystal.obj");
 
     HightPoint = CrystalModel->HighVal;
     RightPoint = CrystalModel->RightVal;
@@ -28,10 +28,10 @@ Crystal::Crystal(vec3 pos,float size){
     CenterPoint = vec3(CrystalModelMatrix * vec4(0, HightPoint / 2, 0, 1));
     CreateAABB();
 
-    DeathParts = new Drawable("earth.obj");
+    DeathParts = new Drawable("Assets/earth.obj");
 
     DeathEmitter = new SphericalEmitter(DeathParts, 200, CenterPoint, DeathBeginCol, DeathEndCol, RadiusMax);
-    LifeBar = new Drawable("health_bar_green.obj");
+    LifeBar = new Drawable("Assets/health_bar_green.obj");
 }
 
 void Crystal::Draw(glm::mat4 proj, glm::mat4 view, GLuint Vloc, GLuint Mloc, GLuint Ploc,float dt,bool drawHealth,bool DrawParts){

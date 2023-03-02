@@ -7,7 +7,7 @@ using namespace glm;
 using namespace std;
 
 Sfaira::Sfaira(glm::vec3 Pos,float size,float VelFactor){
-    sfaira=new Drawable("earth.obj");
+    sfaira=new Drawable("Assets/earth.obj");
 
 
     HightPoint = sfaira->HighVal;

@@ -146,18 +146,13 @@ void Renderer::createContext(){
     
     colors= glGetUniformLocation(shaderProgram, "mycolor");
 
-    //DRAWABLES============================================================================
-    tower = new Drawable("tower.obj");
-    crystal = new Drawable("crystal.obj");
-    robot = new Drawable("robot.obj");
-
 
     //Textures============================================================================
     roadTex.myloaderBMP("Assets/road.bmp");
     grassTex.myloaderBMP("Assets/CloisterGrounds.bmp");
-    towerTex.myloaderBMP("tower.bmp");
-    crystalTex.myloaderBMP("crystal.bmp");
-    robotTex.myloaderBMP("robot.bmp");
+    towerTex.myloaderBMP("Assets/tower.bmp");
+    crystalTex.myloaderBMP("Assets/crystal.bmp");
+    robotTex.myloaderBMP("Assets/robot.bmp");
 
 
 
@@ -227,9 +222,11 @@ void Renderer::createContext(){
 
     quad= new Drawable(quadVertices, quadUVs);
 
+
+    /*
     sphere = new Drawable("earth.obj");
    
-    //*
+    
     for (int i = 0; i < sphere->normals.size(); i++) {
 
         sphere->normals[i] *= -1.0;
@@ -238,7 +235,7 @@ void Renderer::createContext(){
 
     //sphere = new Drawable(sphere->vertices, sphere->uvs, sphere->normals);
     //suz = new Drawable("suzanne.obj");
-
+    //*/
     
 
 

@@ -23,16 +23,16 @@ Robot::Robot(int lastpos,int PathPieces,float size ) {
 	LastPos = lastpos;
 	LenPath = PathPieces;
     RobotScaleMatrix = glm::scale(glm::mat4(), glm::vec3(size, size, size));
-	RobotModel = new Drawable("robot.obj");
+	RobotModel = new Drawable("Assets/robot.obj");
 
     //cout << RobotModel->HighVal <<"  "<< RobotModel->RightVal << endl;
     HightPoint = RobotModel->HighVal;
     RightPoint = RobotModel->RightVal;
     CreateAABB();
 
-    LifeBar = new Drawable("health_bar_green.obj");
-    DeathParts = new Drawable("earth.obj");
-    health = 100;
+    LifeBar = new Drawable("Assets/health_bar_green.obj");
+    DeathParts = new Drawable("Assets/earth.obj");
+    health = 500;
    // DeathEmitter = new SphericalEmitter(DeathParts, 200, CenterPoint, DeathBeginCol, DeathEndCol, RadiusMax);
     
    

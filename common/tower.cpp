@@ -21,7 +21,7 @@ Tower::Tower(){
 Tower::Tower(vec3 pos,float size){
     CurrentPos=pos;
     TowerScaleMatrix = glm::scale(glm::mat4(), glm::vec3(size, size, size));
-    TowerModel=new Drawable("tower.obj");
+    TowerModel=new Drawable("Assets/tower.obj");
     
 	TowerModelMatrix = translate(mat4(), CurrentPos) * TowerScaleMatrix;
 	glm::vec3 SfairaPos = vec3(TowerModelMatrix * vec4(vec3(TowerModel->RightVal-2.5, TowerModel->HighVal - 3.0, 0.0), 1));
@@ -31,12 +31,12 @@ Tower::Tower(vec3 pos,float size){
     BigSfaira = new Sfaira(SfairaPos, 0.1, 2.5);
 
 
-    parts = new Drawable("star.obj");
+    parts = new Drawable("Assets/star.obj");
 
     NormalParticles = new TailEmitter(parts, 500, CurrentPos, CurrentPos,.8);
     BigParticles = new TailEmitter(parts, 1000, CurrentPos, DBegClr, DEndClr,1.8);
     
-    ColParts = new Drawable("earth.obj");
+    ColParts = new Drawable("Assets/earth.obj");
 
 
     NormalCollusionEmitter = new PolarEmitter(ColParts, 500, SfairaPos, SfairaPos);
