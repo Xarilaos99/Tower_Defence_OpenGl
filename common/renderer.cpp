@@ -507,7 +507,7 @@ void Renderer::Objects(mat4 viewMatrix,mat4 projectionMatrix,GLuint VLocation, G
                 for (int i = 0; i < RobCnt + 1; i++) {
                     if (!Robots[i]->IsDead()) {
                         float dis = GetDistance(Robots[i], Towers[j]);
-                        cout << dis << endl;
+                        //cout << dis << endl;
 
                         if (MinDis > dis && dis < 3.0f) {
                             MinDis = dis;
@@ -624,7 +624,7 @@ void Renderer::pollKeyboard(GLFWwindow* window, int key, int scancode, int actio
 
     
    
-    if (TowerTime >8.5) {
+    if (TowerTime >8) {
         if (Towers.size() < 3) {
 
             if (key == GLFW_KEY_T && action == GLFW_PRESS) {

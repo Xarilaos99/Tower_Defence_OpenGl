@@ -32,7 +32,7 @@ Robot::Robot(int lastpos,int PathPieces,float size ) {
 
     LifeBar = new Drawable("Assets/health_bar_green.obj");
     DeathParts = new Drawable("Assets/earth.obj");
-    health = 400;
+    health = 350;
    // DeathEmitter = new SphericalEmitter(DeathParts, 200, CenterPoint, DeathBeginCol, DeathEndCol, RadiusMax);
     
    
@@ -113,7 +113,7 @@ void Robot::CreateAABB() {
 
     };
 
-    cout << sizeof(AABBVerts)<<"  "<<AABBVerts.size()  << endl;
+    //cout << sizeof(AABBVerts)<<"  "<<AABBVerts.size()  << endl;
 
     MaxAABB = AABBVerts[32];
     MinAABB = AABBVerts[0];
