@@ -140,8 +140,7 @@ add_executable(${Myexe}
   common/PolarEmitter.cpp
   common/PolarEmitter.h
 
-  ${Mydir}/Assets/fiery.bmp
-  ${Mydir}/Assets/road.bmp
+    
   
   
 
@@ -177,7 +176,7 @@ create_default_target_launcher(${Myexe} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURC
 
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
-SOURCE_GROUP(assets REGULAR_EXPRESSION ".*/.*bmp$" )
+
 
 SOURCE_GROUP(obj REGULAR_EXPRESSION ".*/.*obj$" )
 
