@@ -76,7 +76,7 @@
     
     float currentTime;
     float Time;
-    float TowerTime=6.0f;
+    float TowerTime=7.0f;
     float dt;
 
 
